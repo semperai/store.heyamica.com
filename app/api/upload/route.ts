@@ -1,13 +1,17 @@
 import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  HeadObjectCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
 
 export async function POST(req: NextRequest) {
   try {
     const client = new S3Client({
       endpoint: process.env.AWS_ENDPOINT,
       region: process.env.AWS_REGION
-    })
+    });
 
     const formData = await req.formData()
     const file = formData.get('file') as unknown as File | null;
@@ -17,6 +21,24 @@ export async function POST(req: NextRequest) {
 
     const buf = Buffer.from(await file.arrayBuffer());
     const key = createHash('sha256').update(buf).digest('hex');
+
+    // first we see if object exists
+    const headCommand = new HeadObjectCommand({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: key,
+    });
+    try {
+      const response = await client.send(headCommand);
+      return NextResponse.json({
+        message: "File already exists",
+        key,
+        response,
+      }, {
+        status: 200,
+      });
+    } catch (error: any) {
+      // if object does not exist, we upload it
+    }
 
     const uploadCommand = new PutObjectCommand({
       Bucket: process.env.AWS_BUCKET_NAME,
@@ -29,7 +51,9 @@ export async function POST(req: NextRequest) {
        message: "File uploaded successfully",
        key,
        response,
-     });
+     }, {
+      status: 201,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message })
   }

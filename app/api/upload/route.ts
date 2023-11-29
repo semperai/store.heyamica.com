@@ -5,8 +5,14 @@ import {
   HeadObjectCommand,
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: NextRequest) {
+  const supabase = createClient(
+    process.env.SUPABASE_URL as string,
+    process.env.SUPABASE_KEY as string,
+  );
+
   try {
     const client = new S3Client({
       endpoint: process.env.AWS_ENDPOINT,
@@ -45,6 +51,11 @@ export async function POST(req: NextRequest) {
       Key: key,
       Body: buf,
     });
+
+    const { error } = await supabase.from("files").insert({
+      type: "vrm",
+      hash: key,
+    })
   
     const response = await client.send(uploadCommand);
     return NextResponse.json({

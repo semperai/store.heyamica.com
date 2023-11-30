@@ -7,6 +7,20 @@ import {
 } from '@aws-sdk/client-s3';
 import { createClient } from '@supabase/supabase-js';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
+
 export async function POST(req: NextRequest) {
   const supabase = createClient(
     process.env.SUPABASE_URL as string,
@@ -20,9 +34,29 @@ export async function POST(req: NextRequest) {
     });
 
     const formData = await req.formData()
-    const file = formData.get('file') as unknown as File | null;
+    const files = formData.getAll('file') as unknown as File[] | null;
+    if (files === null) {
+      return NextResponse.json({
+        error: "No file provided"
+      }, {
+        status: 400,
+        headers: corsHeaders,
+      })
+    }
+
+    let file = null;
+    // we get the last file uploaded due to... reasons
+    // (filepond uploads metadata first, and we only want the last one)
+    for (const f of files) {
+      file = f;
+    }
     if (file === null) {
-      return NextResponse.json(null, { status: 400 })
+      return NextResponse.json({
+        error: "No file found"
+      }, {
+        status: 400,
+        headers: corsHeaders,
+      })
     }
 
     const buf = Buffer.from(await file.arrayBuffer());
@@ -41,6 +75,7 @@ export async function POST(req: NextRequest) {
         response,
       }, {
         status: 200,
+        headers: corsHeaders,
       });
     } catch (error: any) {
       // if object does not exist, we upload it
@@ -64,8 +99,14 @@ export async function POST(req: NextRequest) {
        response,
      }, {
       status: 201,
+      headers: corsHeaders,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message })
+    return NextResponse.json({
+      error: error.message
+    }, {
+      status: 500,
+      headers: corsHeaders,
+    })
   }
 }

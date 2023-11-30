@@ -20,8 +20,9 @@ export async function OPTIONS(request: Request) {
   });
 }
 
-
 export async function POST(req: NextRequest) {
+  const queryType: string = req.nextUrl.searchParams.get("type") ?? "none";
+
   const supabase = createClient(
     process.env.SUPABASE_URL as string,
     process.env.SUPABASE_KEY as string,
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     });
 
     const { error } = await supabase.from("files").insert({
-      type: "vrm",
+      type: queryType,
       hash: key,
     })
   

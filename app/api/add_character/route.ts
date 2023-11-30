@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
     }
 
     const {
+      name,
       system_prompt,
       vision_system_prompt,
-      name,
       bg_url,
       youtube_videoid,
       vrm_url,
@@ -53,9 +53,9 @@ export async function POST(req: NextRequest) {
       .from("characters")
       .insert({
         sqid,
+        name,
         system_prompt,
         vision_system_prompt,
-        name,
         bg_url,
         youtube_videoid,
         vrm_url,

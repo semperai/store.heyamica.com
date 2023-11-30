@@ -63,6 +63,41 @@ export async function POST(req: NextRequest) {
     const buf = Buffer.from(await file.arrayBuffer());
     const key = createHash('sha256').update(buf).digest('hex');
 
+    let invalidFile = false;
+    switch (queryType) {
+      case "bgimg": {
+        if (
+          // jpg
+          ! buf.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])) &&
+          // png
+          ! buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+        ) {
+          invalidFile = true;
+        }
+        break;
+      }
+      case "vrm": {
+        console.log(buf.subarray(0, 4));
+        if (! buf.subarray(0, 4).equals(Buffer.from([0x67, 0x6c, 0x54, 0x46]))) {
+          invalidFile = true;
+        }
+        break;
+      }
+      default: {
+        invalidFile = true;
+        break;
+      }
+    }
+
+    if (invalidFile) {
+      return NextResponse.json({
+        error: "Invalid file type"
+      }, {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
     // first we see if object exists
     const headCommand = new HeadObjectCommand({
       Bucket: process.env.AWS_BUCKET_NAME,

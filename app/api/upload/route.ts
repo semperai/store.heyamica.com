@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
         break;
       }
       case "vrm": {
-        console.log(buf.subarray(0, 4));
         if (! buf.subarray(0, 4).equals(Buffer.from([0x67, 0x6c, 0x54, 0x46]))) {
           invalidFile = true;
         }

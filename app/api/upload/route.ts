@@ -92,6 +92,15 @@ export async function POST(req: NextRequest) {
       type: queryType,
       hash: key,
     })
+
+    if (error) {
+      return NextResponse.json({
+        error: "Database inaccessible"
+      }, {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
   
     const response = await client.send(uploadCommand);
     return NextResponse.json({

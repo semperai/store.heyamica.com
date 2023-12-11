@@ -88,6 +88,19 @@ app.post(
         }
         break;
       }
+      case "voice": {
+        if (
+          // tagged mp3
+          ! buf.subarray(0, 3).equals(Buffer.from([0x49, 0x44, 0x33])) &&
+          // untagged mp3
+          ! buf.subarray(0, 2).equals(Buffer.from([0xff, 0xfb])) &&
+          // wav
+          ! buf.subarray(0, 4).equals(Buffer.from([0x52, 0x49, 0x46, 0x46]))
+        ) {
+          invalidFile = true;
+        }
+        break;
+      }
       default: {
         invalidFile = true;
         break;

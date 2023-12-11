@@ -183,6 +183,7 @@ app.post("/api/add_character", async (req: Request, res: Response) => {
 
     const {
       name,
+      description,
       system_prompt,
       vision_system_prompt,
       bg_url,
@@ -198,6 +199,7 @@ app.post("/api/add_character", async (req: Request, res: Response) => {
       .from("characters")
       .insert({
         sqid,
+        description,
         name,
         system_prompt,
         vision_system_prompt,
